@@ -78,24 +78,24 @@ class Operacoes extends Controller
             $valor = $this->maskOff($request->valor); //chamando função maskOff (função criada para retirar caracteres especiais)
 
             $contaSender = Conta::where('cpf', $request->cpf)->first(); //encontra a conta que vai transferir o valor
+            
+            if($contaSender->saldo >= $valor){ //está entrando nesse bloco de comando mesmo quando a condição é false
 
-            if($contaSender->saldo >= $valor){ //se a conta que vai transferir tiver saldo suficiente
+                //return dd($contaSender->saldo);
 
-                $contaReceiver = Conta::where('num_conta', $request->num_conta)->first(); //encontra a conta bancaria que vai receber o valor
-
-                $contaSender->saldo = $contaSender->saldo - $valor; //conta que envia subtrai valor transferido
+                $contaSender->saldo = $contaSender->saldo - $valor;
                 $contaSender->save();
-
+    
+                $contaReceiver = Conta::where('num_conta', $request->num_conta)->first(); //encontra a conta bancaria que vai receber o valor
                 $contaReceiver->saldo = $contaReceiver->saldo + $valor; //conta que recebe valor transferido
                 $contaReceiver->save();
-            
+                    
                 return response()->json(['msg' => 'Transferência concluída com sucesso!']);
-
-            }else{
+            }
+            else{
                 return response()->json(['msg' => 'Saldo insuficiente!']);
             }
-
-        }else{ //se senha errada
+        }else{ //se senha incorreta
             return response()->json(['msg' => 'Senha incorreta!']);
         }
     }

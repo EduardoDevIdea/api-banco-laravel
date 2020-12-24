@@ -33,6 +33,9 @@ Route::group(['middleware' => ['ApiJWT']], function(){
     //Cadastra user do tipo cliente e cria uma conta para ele
     Route::post('/cadastro-cliente', 'App\Http\Controllers\Api\UserController@cadastroCliente');
 
+    //Cadastra user tipo admin
+    Route::post('/cadastro-admin', 'App\Http\Controllers\Api\UserController@cadastroAdmin');
+
     //Busca user do tipo cliente usando a chave estrangeira user_id ta tabela contas
     Route::get('/show-cliente/{id}', 'App\Http\Controllers\Api\UserController@showCliente');
 

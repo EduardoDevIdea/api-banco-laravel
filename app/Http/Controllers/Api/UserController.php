@@ -10,6 +10,16 @@ use App\Models\Conta;
 
 class UserController extends Controller
 {
+
+    /**
+     * Remove cpf mask
+     */
+    public function removeCpfMask($cpf){
+        $resultado = str_replace(".", "", $cpf);
+        $resultado = str_replace("-", "", $resultado);
+        return $resultado;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -26,57 +36,112 @@ class UserController extends Controller
      */
     public function cadastroCliente (Request $request){
 
-        $userCliente = new User;
+        $cpf = $this->removeCpfMask($request->cpf);
 
-        //Atribuindo dados do usuário vindos do formulário de cadastro
-        $userCliente->name = $request->name;
-        $userCliente->last_name = $request->last_name;
-        $userCliente->cpf = $request->cpf;
-        $userCliente->telefone_1 = $request->telefone_1;
-        $userCliente->telefone_2 = $request->telefone_2;
-        $userCliente->email = $request->email;
-        $userCliente->cep = $request->cep;
-        $userCliente->logradouro = $request->logradouro;
-        $userCliente->complemento = $request->complemento;
-        $userCliente->bairro = $request->bairro;
-        $userCliente->municipio = $request->municipio;
-        $userCliente->estado = $request->estado;
+        $getUserWithCpf = User::where('cpf', $cpf)->count(); //busca o número de registros com este cpf
 
-        //password do usuário recebe senha cripitografada
-        $userCliente->password = Hash::make($request->password);
+        if($getUserWithCpf == 0){
 
-        //Atribuindo usuario como cliente
-        $userCliente->tipo = "cliente";
+            $userCliente = new User;
 
-        //Salvando registro de usuário do tipo cliente
-        $userCliente->save();
+            //Atribuindo dados do usuário vindos do formulário de cadastro
+            $userCliente->name = $request->name;
+            $userCliente->last_name = $request->last_name;
+            $userCliente->cpf = $request->cpf;
+            $userCliente->telefone_1 = $request->telefone_1;
+            $userCliente->telefone_2 = $request->telefone_2;
+            $userCliente->email = $request->email;
+            $userCliente->cep = $request->cep;
+            $userCliente->logradouro = $request->logradouro;
+            $userCliente->complemento = $request->complemento;
+            $userCliente->bairro = $request->bairro;
+            $userCliente->municipio = $request->municipio;
+            $userCliente->estado = $request->estado;
 
-        //------------CRIAÇÂO DE CONTA PARA O USER CLIENTE---------------------
-        //Criando Conta corrente para o usuario que acabou de ser cadastrado
-        $conta = new Conta;
+            //password do usuário recebe senha cripitografada
+            $userCliente->password = Hash::make($request->password);
 
-        $conta->user_name = $request->name;
-        $conta->user_last_name = $request->last_name;
-        $conta->cpf = $request->cpf;
+            //Atribuindo usuario como cliente
+            $userCliente->tipo = "cliente";
 
-        //Pegando o id do user para armazenar na user_id (chave estrangeira da tabela conta)
-        $user_id = User::where('cpf', $request->cpf)->value('id'); //pegando apenas o id onde o cpf é igual ao fornecido na requisição
-        $conta->user_id = $user_id;
+            //Salvando registro de usuário do tipo cliente
+            $userCliente->save();
 
-        //Atribuição do numero da conta
-        $num_default = '111'; //numero escolhido para ser contatenado com todos os numeros de contas (foi escolhido o tipo string para poder concatenar)
-        $num_random = rand(); //gerando numero aleatório utilizando método rand() do php (consultar documentação do php)
-        $num_conta = $num_default.$num_random; //concatenando os numeros criados acima
-        $conta->num_conta = $num_conta;
+            //------------CRIAÇÂO DE CONTA PARA O USER CLIENTE---------------------
+            //Criando Conta corrente para o usuario que acabou de ser cadastrado
+            $conta = new Conta;
 
-        //Armazenando conta recém criada como null (regra do negócio para uma conta recém criada)
-        $conta->saldo = null;
+            $conta->user_name = $request->name;
+            $conta->user_last_name = $request->last_name;
+            $conta->cpf = $request->cpf;
 
-        //Salvando todos os dados da nova conta no banco de dados
-        $conta->save();
+            //Pegando o id do user para armazenar na user_id (chave estrangeira da tabela conta)
+            $user_id = User::where('cpf', $request->cpf)->value('id'); //pegando apenas o id onde o cpf é igual ao fornecido na requisição
+            $conta->user_id = $user_id;
 
-        //ao final da criação do user e da conta corrente do user, retorna o usuário criado
-        return response()->json($conta);
+            //Atribuição do numero da conta
+            $num_default = '111'; //numero escolhido para ser contatenado com todos os numeros de contas (foi escolhido o tipo string para poder concatenar)
+            $num_random = rand(); //gerando numero aleatório utilizando método rand() do php (consultar documentação do php)
+            $num_conta = $num_default.$num_random; //concatenando os numeros criados acima
+            $conta->num_conta = $num_conta;
+
+            //Armazenando saldo da conta recém criada como zero (regra do negócio para uma conta recém criada)
+            $conta->saldo = 0;
+
+            //Salvando todos os dados da nova conta no banco de dados
+            $conta->save();
+
+            //ao final da criação do user e da conta corrente do user, retorna o usuário criado
+            return response()->json(['msg' => 'Cadastro de realizado com sucesso!']);
+            
+        }else{
+            return response()->json(['msg' => 'Cpf informado já possui cadastro!']);
+        }
+    }
+
+
+    /**
+     * Registra de usuário tipo admin
+     */
+    public function cadastroAdmin(Request $request){
+
+        $cpf = $this->removeCpfMask($request->cpf);
+
+        $getUserWithCpf = User::where('cpf', $cpf)->count(); //busca o número de registros com este cpf
+
+        if($getUserWithCpf == 0){ //se não houver user com o mesmo cpf, cria user
+
+            $userAdmin = new User;
+
+            //Atribuindo dados do usuário vindos do formulário de cadastro
+            $userAdmin->name = $request->name;
+            $userAdmin->last_name = $request->last_name;
+            $userAdmin->cpf = $cpf; // recebe cpf sem máscara
+            $userAdmin->telefone_1 = $request->telefone_1;
+            $userAdmin->telefone_2 = $request->telefone_2;
+            $userAdmin->email = $request->email;
+            $userAdmin->cep = $request->cep;
+            $userAdmin->logradouro = $request->logradouro;
+            $userAdmin->complemento = $request->complemento;
+            $userAdmin->bairro = $request->bairro;
+            $userAdmin->municipio = $request->municipio;
+            $userAdmin->estado = $request->estado;
+
+            //password do usuário recebe senha cripitografada
+            $userAdmin->password = Hash::make($request->password);
+
+            //Atribuindo usuario como cliente
+            $userAdmin->tipo = "admin";
+
+            //Salvando registro de usuário do tipo cliente
+            $userAdmin->save();
+
+            return response()->json(['msg' => 'Cadastro realizado com sucesso!']);
+
+        }else {
+            return response()->json(['msg' => 'Cpf informado já possui cadastro!']);
+        }
+
     }
 
 
