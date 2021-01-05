@@ -200,7 +200,7 @@ class UserController extends Controller
         $user = User::where('cpf', $request->cpf)->first(); //encontra usuário 
 
         if(Hash::check($request->currentPassword, $user->password)){  //verifica se a senha informada no formulario é igual a senha no banco de dados. Hash:check é usado para verifica senha criptografada
-            $user->password = Hash::make($request->newPasswowrd); //altera a senha com hash
+            $user->password = Hash::make($request->newPassword); //altera a senha com hash
             $user->save();
             return response()->json(['msg' => 'Senha alterada com sucesso!']);
         }else{
