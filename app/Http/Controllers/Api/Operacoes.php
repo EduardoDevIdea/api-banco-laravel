@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Hash; //para fazer o hash da senha antes de compa
 class Operacoes extends Controller
 {
     /**
-     * Função criada para retirar caracteres especiais do valor e transforma-lo em numero
+     *  Retira caracteres especiais do valor e transforma em numero
      */
     public function maskOff($valorInformado){
         
@@ -21,6 +21,15 @@ class Operacoes extends Controller
         $resultado = str_replace(",", ".", $resultado); //subistitui "," por "." - O ponto agora será o separador das casas decimais
         $resultado = floatval($resultado); // função floatval() transforma a string do parâmetro em ponto flutuante (consultar documentação php)
 
+        return $resultado;
+    }
+
+    /**
+     * Remove cpf mask
+     */
+    public function removeCpfMask($cpf){
+        $resultado = str_replace(".", "", $cpf);
+        $resultado = str_replace("-", "", $resultado);
         return $resultado;
     }
 
@@ -40,11 +49,14 @@ class Operacoes extends Controller
      */
     public function saque(Request $request)
     {
-        $user = User::where('cpf', $request->cpf)->first(); //encontra o user
+
+        $cpf = $this->removeCpfMask($request->cpf);
+
+        $user = User::where('cpf', $cpf)->first(); //encontra o user
         
         if(Hash::check($request->password, $user->password)){ //verifica se a senha informada no formulario é igual a senha no banco de dados. Hash:check é usado para verifica senha criptografada
 
-            $conta = Conta::where('cpf', $request->cpf)->first(); //encontra a conta bancaria do user
+            $conta = Conta::where('cpf', $cpf)->first(); //encontra a conta bancaria do user
 
             $valor = $this->maskOff($request->valor); //chamando função maskOff (função criada para retirar caracteres especiais)
 
@@ -70,18 +82,18 @@ class Operacoes extends Controller
      * Mensagens de senha incorreta, saldo insuficiente e de sucesso, são enviadas de acordo com as verificações
      */
     public function transferencia(Request $request){
+
+        $cpf = $this->removeCpfMask($request->cpf);
         
-        $user = User::where('cpf', $request->cpf)->first(); //encontra o user que quer realizar a transferencia
+        $user = User::where('cpf', $cpf)->first(); //encontra o user que quer realizar a transferencia
 
         if(Hash::check($request->password, $user->password)){ //verifica se a senha informada no formulario é igual a senha no banco de dados. Hash:check é usado para verifica senha criptografada
 
             $valor = $this->maskOff($request->valor); //chamando função maskOff (função criada para retirar caracteres especiais)
 
-            $contaSender = Conta::where('cpf', $request->cpf)->first(); //encontra a conta que vai transferir o valor
+            $contaSender = Conta::where('cpf', $cpf)->first(); //encontra a conta que vai transferir o valor
             
-            if($contaSender->saldo >= $valor){ //está entrando nesse bloco de comando mesmo quando a condição é false
-
-                //return dd($contaSender->saldo);
+            if($contaSender->saldo >= $valor){ 
 
                 $contaSender->saldo = $contaSender->saldo - $valor;
                 $contaSender->save();
@@ -107,11 +119,12 @@ class Operacoes extends Controller
      * Mensagens de senha incorreta, saldo insuficiente e de sucesso, são enviadas de acordo com as verificações
      */
     public function deposito(Request $request){
+
+        $cpf = $this->removeCpfMask($request->cpf);
         
-        $user = User::where('cpf', $request->cpf)->first(); //encontra o user que quer realizar a deposito
+        $user = User::where('cpf', $cpf)->first(); //encontra o user que quer realizar a deposito
 
         if(Hash::check($request->password, $user->password)){ //verifica se a senha informada no formulario é igual a senha no banco de dados. Hash:check é usado para verifica senha criptografada
-
 
             $contaReceiver = Conta::where('num_conta', $request->num_conta)->first(); //encontra a conta bancaria que vai receber o valor
 

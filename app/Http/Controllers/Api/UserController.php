@@ -47,7 +47,7 @@ class UserController extends Controller
             //Atribuindo dados do usuário vindos do formulário de cadastro
             $userCliente->name = $request->name;
             $userCliente->last_name = $request->last_name;
-            $userCliente->cpf = $request->cpf;
+            $userCliente->cpf = $cpf;
             $userCliente->telefone_1 = $request->telefone_1;
             $userCliente->telefone_2 = $request->telefone_2;
             $userCliente->email = $request->email;
@@ -73,10 +73,10 @@ class UserController extends Controller
 
             $conta->user_name = $request->name;
             $conta->user_last_name = $request->last_name;
-            $conta->cpf = $request->cpf;
+            $conta->cpf = $cpf;
 
             //Pegando o id do user para armazenar na user_id (chave estrangeira da tabela conta)
-            $user_id = User::where('cpf', $request->cpf)->value('id'); //pegando apenas o id onde o cpf é igual ao fornecido na requisição
+            $user_id = User::where('cpf', $cpf)->value('id'); //pegando apenas o id onde o cpf é igual ao fornecido na requisição
             $conta->user_id = $user_id;
 
             //Atribuição do numero da conta
@@ -158,6 +158,8 @@ class UserController extends Controller
      * Atualiza a conta do Usuário e os campos da Conta corrente que possuem o mesmo nome
      */
     public function updateCliente(Request $request, $id) {
+
+        $cpf = $this->removeCpfMask($request->cpf);
         
         //----Update User Cliente
         $user = User::find($id);
@@ -165,7 +167,7 @@ class UserController extends Controller
         $user->name = $request->name;
         $user->last_name = $request->last_name;
         $user->email = $request->email;
-        $user->cpf = $request->cpf;
+        $user->cpf = $cpf;
         $user->telefone_1 = $request->telefone_1;
         $user->telefone_2 = $request->telefone_2;
         $user->cep = $request->cep;
@@ -183,10 +185,8 @@ class UserController extends Controller
         
         $contaUser->user_name = $request->name;
         $contaUser->user_last_name = $request->last_name;
-        $contaUser->cpf = $request->cpf;
-        //$contaUser->num_conta = $contaUser->num_conta; //recebe o mesmo valor porque não pode ser nullo
-        //$contaUser->user_id = $contaUser->user_id;
-        //$contaUser->saldo = $contaUser->saldo;
+        $contaUser->cpf = $cpf;
+        
         $contaUser->save();
         //------------------------------------------------------------------------------------------------
         

@@ -8,6 +8,35 @@ use App\Models\Conta;
 
 class ContaController extends Controller
 {
+
+
+    /**
+     * Remove cpf mask
+     */
+    public function removeCpfMask($cpf){
+        $resultado = str_replace(".", "", $cpf);
+        $resultado = str_replace("-", "", $resultado);
+        return $resultado;
+    }
+
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($cpf)
+    {
+
+        $cpfMaskOff = $this->removeCpfMask($cpf);
+
+        $conta = Conta::where('cpf', $cpfMaskOff)->first();
+
+        return response()->json($conta);
+    }
+
+
     /**
      * Display a listing of the resource.
      *
@@ -39,19 +68,6 @@ class ContaController extends Controller
     public function store(Request $request)
     {
         //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($cpf)
-    {
-        $conta = Conta::where('cpf', $cpf)->first();
-
-        return response()->json($conta);
     }
 
     /**
